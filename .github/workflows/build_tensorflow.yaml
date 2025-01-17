@@ -27,7 +27,7 @@ jobs:
     # 2. Clone TensorFlow Source Code
     - name: Clone TensorFlow Repository
       run: |
-        git clone --depth 1 https://github.com/tensorflow/tensorflow.git
+        git clone --depth 1 --branch r2.13 https://github.com/tensorflow/tensorflow.git
         cd tensorflow
 
     # 3. Detect TensorFlow Version
@@ -69,15 +69,15 @@ jobs:
       run: |
         cd tensorflow
         ./configure  # Run TensorFlow's configuration script
-        bazel build --config=opt //tensorflow/lite:libtensorflowlite.so
+        bazel build --python_path=/usr/bin/python3 --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures //tensorflow/lite:libtensorflowlite.so
 
     # 8. Copy Necessary Files
     - name: Prepare Libraries and Headers
       run: |
         mkdir -p package/usr/lib package/usr/include/tensorflow package/usr/include/flatbuffers
-        cp tensorflow/bazel-bin/tensorflow/lite/libtensorflowlite.so package/usr/lib/
-        rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/tensorflow/ package/usr/include/tensorflow/
-        rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/bazel-out/../../external/flatbuffers/include/flatbuffers/ package/usr/include/flatbuffers/
+        cp -r tensorflow/bazel-bin/tensorflow/lite/libtensorflowlite.so package/usr/lib/
+        cp -r tensorflow/bazel-tensorflow/tensorflow package/usr/include/tensorflow/
+        cp -r tensorflow/bazel-tensorflow/external/flatbuffers/include/flatbuffers package/usr/include/flatbuffers/
 
     # 9. Package into a .deb File
     - name: Create .deb Package
