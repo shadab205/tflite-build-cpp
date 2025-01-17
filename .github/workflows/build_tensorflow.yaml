@@ -1,0 +1,98 @@
+name: Build TensorFlowLite and Create .deb Package
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  TENSORFLOW_VERSION: ""
+
+jobs:
+  build-and-package:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        arch: [amd64, aarch64]
+
+    steps:
+    # 1. Checkout the Workflow Repository (Optional)
+    - name: Checkout Workflow Repository
+      uses: actions/checkout@v3
+
+    # 2. Clone TensorFlow Source Code
+    - name: Clone TensorFlow Repository
+      run: |
+        git clone --depth 1 https://github.com/tensorflow/tensorflow.git
+        cd tensorflow
+
+    # 3. Detect TensorFlow Version
+    - name: Detect TensorFlow Version
+      id: get_version
+      run: |
+        export TENSORFLOW_VERSION=$(python3 -c "import os; version_file = 'tensorflow/tools/pip_package/setup.py'; \
+        exec(open(version_file).read()); print(__version__)")
+        echo "TensorFlow version detected: $TENSORFLOW_VERSION"
+        echo "TENSORFLOW_VERSION=$TENSORFLOW_VERSION" >> $GITHUB_ENV
+
+    # 4. Set up Bazel
+    - name: Install Bazel
+      uses: bazelbuild/setup-bazel@v5
+      with:
+        version: '6.5.0'
+
+    # 5. Install Build Dependencies
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-pip build-essential dpkg-dev
+
+    # 6. Set up Environment for aarch64 (if needed)
+    - name: Set Up Cross Compilation (aarch64)
+      if: matrix.arch == 'aarch64'
+      run: |
+        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+        export CC=aarch64-linux-gnu-gcc
+        export CXX=aarch64-linux-gnu-g++
+        export BAZEL_LINKOPTS='-static-libstdc++'
+
+    # 7. Build TensorFlow Lite with Bazel
+    - name: Build TensorFlowLite
+      run: |
+        cd tensorflow
+        ./configure  # Run TensorFlow's configuration script
+        bazel build --config=opt //tensorflow/lite:libtensorflowlite.so
+
+    # 8. Copy Necessary Files
+    - name: Prepare Libraries and Headers
+      run: |
+        mkdir -p package/usr/lib package/usr/include/tensorflow package/usr/include/flatbuffers
+        cp tensorflow/bazel-bin/tensorflow/lite/libtensorflowlite.so package/usr/lib/
+        rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/tensorflow/ package/usr/include/tensorflow/
+        rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/bazel-out/../../external/flatbuffers/include/flatbuffers/ package/usr/include/flatbuffers/
+
+    # 9. Package into a .deb File
+    - name: Create .deb Package
+      run: |
+        mkdir -p package/DEBIAN
+        cat <<EOT > package/DEBIAN/control
+        Package: tensorflowlite
+        Version: $TENSORFLOW_VERSION
+        Section: libs
+        Priority: optional
+        Architecture: ${MATRIX_ARCH}
+        Maintainer: Your Name <your_email@example.com>
+        Description: TensorFlow Lite library and headers
+        EOT
+        dpkg-deb --build package tensorflowlite-${{ matrix.arch }}.deb
+
+    # 10. Upload the .deb Artifact
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: tensorflowlite-${{ matrix.arch }}-deb
+        path: tensorflowlite-${{ matrix.arch }}.deb
