@@ -20,8 +20,8 @@ jobs:
         arch: [amd64, aarch64]
 
     steps:
-    # 1. Checkout the Workflow Repository (Optional)
-    - name: Checkout Workflow Repository
+    # 1. Checkout the Workflow Repository
+    - name: Checkout Repository
       uses: actions/checkout@v3
 
     # 2. Clone TensorFlow Source Code
@@ -39,11 +39,15 @@ jobs:
         echo "TensorFlow version detected: $TENSORFLOW_VERSION"
         echo "TENSORFLOW_VERSION=$TENSORFLOW_VERSION" >> $GITHUB_ENV
 
-    # 4. Set up Bazel
+    # 4. Install Bazel
     - name: Install Bazel
-      uses: bazelbuild/setup-bazel@v5
-      with:
-        version: '6.5.0'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y curl
+        curl -LO https://github.com/bazelbuild/bazel/releases/download/6.5.0/bazel-6.5.0-linux-x86_64
+        chmod +x bazel-6.5.0-linux-x86_64
+        sudo mv bazel-6.5.0-linux-x86_64 /usr/local/bin/bazel
+        bazel --version
 
     # 5. Install Build Dependencies
     - name: Install Dependencies
