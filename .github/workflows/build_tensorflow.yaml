@@ -60,8 +60,11 @@ jobs:
     - name: Build TensorFlowLite
       run: |
         cd tensorflow
-        bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures //tensorflow/lite:libtensorflowlite.so
+        bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures --symlink_prefix=output/ //tensorflow/lite:libtensorflowlite.so
 
+    - name: Locate Built TensorFlow Lite Library
+      run: find . -name "libtensorflowlite.so" || echo "File not found!"
+      
     # 7. Copy Necessary Files
     - name: Prepare Libraries and Headers
       run: |
