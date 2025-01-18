@@ -61,21 +61,32 @@ jobs:
         cd tensorflow
         bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
 
-    - name: Locate Built TensorFlow Lite Library
-      run: find . -name "libtensorflowlite.so" || echo "File not found!"
-
-    - name: Prepare Libraries and Headers
+    - name: Locate and Copy TensorFlow Lite Library
       run: |
-        mkdir -p package/usr/lib package/usr/include/tensorflow package/usr/include/flatbuffers
-        cp bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so package/usr/lib/
+        LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so" | head -n 1)
+        if [ -z "$LIB_PATH" ]; then
+          echo "Error: libtensorflowlite.so not found!"
+          exit 1
+        fi
+        echo "Found libtensorflowlite.so at: $LIB_PATH"
+        mkdir -p package/usr/lib
+        cp "$LIB_PATH" package/usr/lib/
+
+    - name: Locate and Copy TensorFlow Headers
+      run: |
+        mkdir -p package/usr/include/tensorflow
         rsync -av tensorflow/ package/usr/include/tensorflow/
-        rsync -av bazel-out/external/flatbuffers/include/flatbuffers/ package/usr/include/flatbuffers/
 
-    - name: Debug TensorFlow Headers
-      run: find tensorflow/ -name "*.h" | head -n 10
-
-    - name: Debug FlatBuffers Headers
-      run: find bazel-out/ -name "flatbuffers" || echo "FlatBuffers headers not found!"
+    - name: Locate and Copy FlatBuffers Headers
+      run: |
+        FLATBUFFERS_PATH=$(find /home/runner/.cache/bazel/ -path "*/external/flatbuffers/include/flatbuffers" | head -n 1)
+        if [ -z "$FLATBUFFERS_PATH" ]; then
+          echo "Error: FlatBuffers headers not found!"
+          exit 1
+        fi
+        echo "Found FlatBuffers headers at: $FLATBUFFERS_PATH"
+        mkdir -p package/usr/include/flatbuffers
+        rsync -av "$FLATBUFFERS_PATH/" package/usr/include/flatbuffers/
 
 
     # 8. Package into a .deb File
