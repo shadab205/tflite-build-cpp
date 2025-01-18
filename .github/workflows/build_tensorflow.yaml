@@ -99,7 +99,8 @@ jobs:
         echo "Found FlatBuffers headers at: $FLATBUFFERS_PATH"
         mkdir -p package/usr/include/flatbuffers
         rsync -av --include '*/' --include '*.h' --exclude '*' "$FLATBUFFERS_PATH/" package/usr/include/flatbuffers/
-
+        find package/usr/include -type d -empty -delete
+        
     # 8. Package into a .deb File
     - name: Create .deb Package
       run: |
