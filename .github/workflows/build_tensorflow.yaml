@@ -76,11 +76,6 @@ jobs:
         mkdir -p package/usr/lib
         cp "$LIB_PATH" package/usr/lib/
 
-    - name: Locate and Copy TensorFlow Headers
-      run: |
-        mkdir -p package/usr/include/tensorflow
-        rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/tensorflow/ package/usr/include/tensorflow/
-
     - name: Locate and Copy Specific TensorFlow Headers
       run: |
         mkdir -p package/usr/include/tensorflow
