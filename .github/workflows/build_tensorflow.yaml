@@ -78,7 +78,9 @@ jobs:
 
     - name: Locate and Copy Specific TensorFlow Headers
       run: |
-        mkdir -p package/usr/include/tensorflow
+        mkdir -p package/usr/include/tensorflow/lite
+        mkdir -p package/usr/include/tensorflow/compiler/mlir/lite
+        mkdir -p package/usr/include/tensorflow/core/public
         # Copy TensorFlow Lite headers
         rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/tensorflow/lite/ package/usr/include/tensorflow/lite/
         # Copy MLIR Lite headers
