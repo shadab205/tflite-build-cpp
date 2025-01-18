@@ -18,7 +18,7 @@ jobs:
 
     strategy:
       matrix:
-        arch: [amd64, aarch64]
+        arch: [amd64, elinux_aarch64]
 
     steps:
     # 1. Checkout the Workflow Repository
@@ -47,24 +47,15 @@ jobs:
         sudo apt-get install -y python3 python3-pip build-essential dpkg-dev
         pip3 install numpy
 
-    # 5. Set up Environment for aarch64 (if needed)
-    - name: Set Up Cross Compilation (aarch64)
-      if: matrix.arch == 'aarch64'
-      run: |
-        sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-        export CC=aarch64-linux-gnu-gcc
-        export CXX=aarch64-linux-gnu-g++
-        export BAZEL_LINKOPTS='-static-libstdc++'
-
     - name: Build TensorFlowLite
       run: |
         cd tensorflow
-        if [ "${{ matrix.arch }}" = "aarch64" ]; then
-          bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --cpu=aarch64 --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
+        if [ "${{ matrix.arch }}" = "elinux_aarch64" ]; then
+          bazel build --config=elinux_aarch64 --config=monolithic --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
         else
           bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
         fi
-        
+
     - name: Locate and Copy TensorFlow Lite Library
       run: |
         LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so" | head -n 1)
