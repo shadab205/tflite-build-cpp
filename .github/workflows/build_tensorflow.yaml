@@ -61,19 +61,25 @@ jobs:
 
     - name: Locate and Copy TensorFlow Lite Library
       run: |
-        LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so" | head -n 1)
+        if [ "${{ matrix.arch }}" = "elinux_aarch64" ]; then
+          LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/elinux_aarch64-opt/bin/tensorflow/lite/c/libtensorflowlite_c.so" | head -n 1)
+        else
+          LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so" | head -n 1)
+        fi
+
         if [ -z "$LIB_PATH" ]; then
-          echo "Error: libtensorflowlite.so not found!"
+          echo "Error: TensorFlow Lite library not found!"
           exit 1
         fi
-        echo "Found libtensorflowlite.so at: $LIB_PATH"
+
+        echo "Found TensorFlow Lite library at: $LIB_PATH"
         mkdir -p package/usr/lib
         cp "$LIB_PATH" package/usr/lib/
 
     - name: Locate and Copy TensorFlow Headers
       run: |
         mkdir -p package/usr/include/tensorflow
-        rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/ package/usr/include/tensorflow/
+        rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/tensorflow package/usr/include/tensorflow/
 
     - name: Locate and Copy FlatBuffers Headers
       run: |
