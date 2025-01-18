@@ -73,7 +73,7 @@ jobs:
         cd tensorflow
         bazel aquery //tensorflow/lite:libtensorflowlite.so
 
- - name: Prepare Libraries and Headers
+    - name: Prepare Libraries and Headers
       run: |
         mkdir -p package/usr/lib package/usr/include/tensorflow package/usr/include/flatbuffers
         cp bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so package/usr/lib/
