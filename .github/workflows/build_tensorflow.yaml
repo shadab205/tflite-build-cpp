@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write  # Grant write access to allow pushing tags
+
 env:
   TENSORFLOW_BRANCH: "v2.18.0"  # Specify the TensorFlow branch or tag manually
   TENSORFLOW_VERSION: "2.18.0"  # Manually define the TensorFlow version
@@ -53,7 +56,7 @@ jobs:
         if [ "${{ matrix.arch }}" = "elinux_aarch64" ]; then
           bazel build --config=elinux_aarch64 --config=monolithic --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
         else
-          bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
+          bazel build --define xnn_enable_avxvnniint8=false --config=monolithic --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
         fi
 
     - name: Locate and Copy TensorFlow Lite Library
