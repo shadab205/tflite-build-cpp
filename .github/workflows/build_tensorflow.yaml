@@ -62,7 +62,7 @@ jobs:
     - name: Locate and Copy TensorFlow Lite Library
       run: |
         if [ "${{ matrix.arch }}" = "elinux_aarch64" ]; then
-          LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/elinux_aarch64-opt/bin/tensorflow/lite/c/libtensorflowlite_c.so" | head -n 1)
+          LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/elinux_aarch64-opt/bin/tensorflow/lite/libtensorflowlite.so" | head -n 1)
         else
           LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so" | head -n 1)
         fi
