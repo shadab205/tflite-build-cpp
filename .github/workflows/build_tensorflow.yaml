@@ -81,6 +81,17 @@ jobs:
         mkdir -p package/usr/include/tensorflow
         rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/tensorflow/ package/usr/include/tensorflow/
 
+    - name: Locate and Copy Specific TensorFlow Headers
+      run: |
+        mkdir -p package/usr/include/tensorflow
+        # Copy TensorFlow Lite headers
+        rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/tensorflow/lite/ package/usr/include/tensorflow/lite/
+        # Copy MLIR Lite headers
+        rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/tensorflow/compiler/mlir/lite/ package/usr/include/tensorflow/compiler/mlir/lite/
+        # Copy version.h
+        mkdir -p package/usr/include/tensorflow/core/public
+        cp tensorflow/tensorflow/core/public/version.h package/usr/include/tensorflow/core/public/version.h
+
     - name: Locate and Copy FlatBuffers Headers
       run: |
         FLATBUFFERS_PATH=$(find /home/runner/.cache/bazel/ -path "*/external/flatbuffers/include/flatbuffers" | head -n 1)
