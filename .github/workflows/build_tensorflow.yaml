@@ -73,13 +73,12 @@ jobs:
         cd tensorflow
         bazel aquery //tensorflow/lite:libtensorflowlite.so
 
-    # 7. Copy Necessary Files
-    - name: Prepare Libraries and Headers
+ - name: Prepare Libraries and Headers
       run: |
         mkdir -p package/usr/lib package/usr/include/tensorflow package/usr/include/flatbuffers
-        cp bazel-bin/tensorflow/lite/libtensorflowlite.so package/usr/lib/
-        cp -r tensorflow/bazel-tensorflow/tensorflow package/usr/include/tensorflow/
-        cp -r tensorflow/bazel-tensorflow/external/flatbuffers/include/flatbuffers package/usr/include/flatbuffers/
+        cp bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so package/usr/lib/
+        rsync -av tensorflow/bazel-tensorflow/tensorflow/ package/usr/include/tensorflow/
+        rsync -av tensorflow/bazel-tensorflow/external/flatbuffers/include/flatbuffers/ package/usr/include/flatbuffers/
 
     # 8. Package into a .deb File
     - name: Create .deb Package
