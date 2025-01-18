@@ -97,7 +97,7 @@ jobs:
         Version: ${{ env.TENSORFLOW_VERSION }}
         Section: libs
         Priority: optional
-        Architecture: ${MATRIX_ARCH}
+        Architecture:${{ matrix.arch }}
         Maintainer: Shadab Shaikh me@shadab-shaikh.de
         Description: TensorFlow Lite library and headers
         EOT
