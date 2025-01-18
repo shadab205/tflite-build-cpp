@@ -62,7 +62,7 @@ jobs:
     - name: Locate and Copy TensorFlow Lite Library
       run: |
         if [ "${{ matrix.arch }}" = "elinux_aarch64" ]; then
-          LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/elinux_aarch64-opt/bin/tensorflow/lite/libtensorflowlite.so" | head -n 1)
+          LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/aarch64-opt/bin/tensorflow/lite/libtensorflowlite.so" | head -n 1)
         else
           LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so" | head -n 1)
         fi
@@ -107,14 +107,16 @@ jobs:
         EOT
         dpkg-deb --build package tensorflowlite-${{ matrix.arch }}.deb
 
-    - name: Create Git Tag
+    - name: Create Git Tag if Not Exists
       run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-        git tag ${{ env.TENSORFLOW_VERSION }}
-        git push origin ${{ env.TENSORFLOW_VERSION }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if git ls-remote --tags origin | grep -q "refs/tags/${{ env.TENSORFLOW_VERSION }}"; then
+          echo "Tag ${{ env.TENSORFLOW_VERSION }} already exists. Skipping tag creation."
+        else
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag ${{ env.TENSORFLOW_VERSION }}
+          git push origin ${{ env.TENSORFLOW_VERSION }}
+        fi
 
     - name: Create GitHub Release
       if: success()
