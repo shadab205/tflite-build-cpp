@@ -103,9 +103,10 @@ jobs:
         EOT
         dpkg-deb --build package tensorflowlite-${{ matrix.arch }}.deb
 
-    # 9. Upload the .deb Artifact
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+    - name: Create GitHub Release
+      if: success()
+      uses: softprops/action-gh-release@v1
       with:
-        name: tensorflowlite-${{ matrix.arch }}-deb
-        path: tensorflowlite-${{ matrix.arch }}.deb
+        files: tensorflowlite-${{ matrix.arch }}.deb
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
