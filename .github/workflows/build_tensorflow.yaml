@@ -59,8 +59,12 @@ jobs:
     - name: Build TensorFlowLite
       run: |
         cd tensorflow
-        bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
-
+        if [ "${{ matrix.arch }}" = "aarch64" ]; then
+          bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --cpu=aarch64 --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
+        else
+          bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
+        fi
+        
     - name: Locate and Copy TensorFlow Lite Library
       run: |
         LIB_PATH=$(find /home/runner/.cache/bazel/_bazel_runner/ -path "*/bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so" | head -n 1)
