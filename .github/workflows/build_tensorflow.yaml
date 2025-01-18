@@ -9,7 +9,8 @@ on:
       - main
 
 env:
-  TENSORFLOW_VERSION: ""
+  TENSORFLOW_BRANCH: "v2.18.0"  # Specify the TensorFlow branch or tag manually
+  TENSORFLOW_VERSION: "2.18.0"  # Manually define the TensorFlow version
 
 jobs:
   build-and-package:
@@ -27,19 +28,9 @@ jobs:
     # 2. Clone TensorFlow Source Code
     - name: Clone TensorFlow Repository
       run: |
-        git clone --depth 1 --branch r2.13 https://github.com/tensorflow/tensorflow.git
-        cd tensorflow
+        git clone --depth 1 --branch ${{ env.TENSORFLOW_BRANCH }} https://github.com/tensorflow/tensorflow.git
 
-    # 3. Detect TensorFlow Version
-    - name: Detect TensorFlow Version
-      id: get_version
-      run: |
-        export TENSORFLOW_VERSION=$(python3 -c "import os; version_file = 'tensorflow/tools/pip_package/setup.py'; \
-        exec(open(version_file).read()); print(__version__)")
-        echo "TensorFlow version detected: $TENSORFLOW_VERSION"
-        echo "TENSORFLOW_VERSION=$TENSORFLOW_VERSION" >> $GITHUB_ENV
-
-    # 4. Install Bazel
+    # 3. Install Bazel
     - name: Install Bazel
       run: |
         sudo apt-get update
@@ -49,13 +40,14 @@ jobs:
         sudo mv bazel-6.5.0-linux-x86_64 /usr/local/bin/bazel
         bazel --version
 
-    # 5. Install Build Dependencies
+    # 4. Install Build Dependencies
     - name: Install Dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y python3 python3-pip build-essential dpkg-dev
+        pip3 install numpy
 
-    # 6. Set up Environment for aarch64 (if needed)
+    # 5. Set up Environment for aarch64 (if needed)
     - name: Set Up Cross Compilation (aarch64)
       if: matrix.arch == 'aarch64'
       run: |
@@ -64,28 +56,28 @@ jobs:
         export CXX=aarch64-linux-gnu-g++
         export BAZEL_LINKOPTS='-static-libstdc++'
 
-    # 7. Build TensorFlow Lite with Bazel
+    # 6. Build TensorFlow Lite with Bazel
     - name: Build TensorFlowLite
       run: |
         cd tensorflow
-        ./configure  # Run TensorFlow's configuration script
+        ./configure --python_path=/usr/bin/python3
         bazel build --python_path=/usr/bin/python3 --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures //tensorflow/lite:libtensorflowlite.so
 
-    # 8. Copy Necessary Files
+    # 7. Copy Necessary Files
     - name: Prepare Libraries and Headers
       run: |
         mkdir -p package/usr/lib package/usr/include/tensorflow package/usr/include/flatbuffers
-        cp -r tensorflow/bazel-bin/tensorflow/lite/libtensorflowlite.so package/usr/lib/
+        cp bazel-bin/tensorflow/lite/libtensorflowlite.so package/usr/lib/
         cp -r tensorflow/bazel-tensorflow/tensorflow package/usr/include/tensorflow/
         cp -r tensorflow/bazel-tensorflow/external/flatbuffers/include/flatbuffers package/usr/include/flatbuffers/
 
-    # 9. Package into a .deb File
+    # 8. Package into a .deb File
     - name: Create .deb Package
       run: |
         mkdir -p package/DEBIAN
         cat <<EOT > package/DEBIAN/control
         Package: tensorflowlite
-        Version: $TENSORFLOW_VERSION
+        Version: ${{ env.TENSORFLOW_VERSION }}
         Section: libs
         Priority: optional
         Architecture: ${MATRIX_ARCH}
@@ -94,7 +86,7 @@ jobs:
         EOT
         dpkg-deb --build package tensorflowlite-${{ matrix.arch }}.deb
 
-    # 10. Upload the .deb Artifact
+    # 9. Upload the .deb Artifact
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
