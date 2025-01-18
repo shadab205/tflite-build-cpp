@@ -103,10 +103,20 @@ jobs:
         EOT
         dpkg-deb --build package tensorflowlite-${{ matrix.arch }}.deb
 
+    - name: Create Git Tag
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git tag ${{ env.TENSORFLOW_VERSION }}
+        git push origin ${{ env.TENSORFLOW_VERSION }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Create GitHub Release
       if: success()
       uses: softprops/action-gh-release@v1
       with:
         files: tensorflowlite-${{ matrix.arch }}.deb
+        tag_name: ${{ env.TENSORFLOW_VERSION }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
