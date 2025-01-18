@@ -56,29 +56,27 @@ jobs:
         export CXX=aarch64-linux-gnu-g++
         export BAZEL_LINKOPTS='-static-libstdc++'
 
-    # 6. Build TensorFlow Lite with Bazel
     - name: Build TensorFlowLite
       run: |
         cd tensorflow
-        bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures --symlink_prefix=output/ //tensorflow/lite:libtensorflowlite.so
+        bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures --symlink_prefix=/ //tensorflow/lite:libtensorflowlite.so
 
-    - name: Debug Bazel Output Directory
-      run: ls -R bazel-bin/ || echo "bazel-bin directory not found!"
-
-    - name: Debug Bazel Output with Symlink Prefix
-      run: ls -R output/bin/ || echo "output/bin directory not found!"
-
-    - name: Analyze Bazel Query
-      run: |
-        cd tensorflow
-        bazel aquery //tensorflow/lite:libtensorflowlite.so
+    - name: Locate Built TensorFlow Lite Library
+      run: find . -name "libtensorflowlite.so" || echo "File not found!"
 
     - name: Prepare Libraries and Headers
       run: |
         mkdir -p package/usr/lib package/usr/include/tensorflow package/usr/include/flatbuffers
         cp bazel-out/k8-opt/bin/tensorflow/lite/libtensorflowlite.so package/usr/lib/
-        rsync -av tensorflow/bazel-tensorflow/tensorflow/ package/usr/include/tensorflow/
-        rsync -av tensorflow/bazel-tensorflow/external/flatbuffers/include/flatbuffers/ package/usr/include/flatbuffers/
+        rsync -av tensorflow/ package/usr/include/tensorflow/
+        rsync -av bazel-out/external/flatbuffers/include/flatbuffers/ package/usr/include/flatbuffers/
+
+    - name: Debug TensorFlow Headers
+      run: find tensorflow/ -name "*.h" | head -n 10
+
+    - name: Debug FlatBuffers Headers
+      run: find bazel-out/ -name "flatbuffers" || echo "FlatBuffers headers not found!"
+
 
     # 8. Package into a .deb File
     - name: Create .deb Package
