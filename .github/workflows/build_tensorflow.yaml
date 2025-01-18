@@ -75,7 +75,7 @@ jobs:
     - name: Locate and Copy TensorFlow Headers
       run: |
         mkdir -p package/usr/include/tensorflow
-        rsync -av tensorflow/ package/usr/include/tensorflow/
+        rsync -av --include '*/' --include '*.h' --exclude '*' tensorflow/ package/usr/include/tensorflow/
 
     - name: Locate and Copy FlatBuffers Headers
       run: |
@@ -86,8 +86,7 @@ jobs:
         fi
         echo "Found FlatBuffers headers at: $FLATBUFFERS_PATH"
         mkdir -p package/usr/include/flatbuffers
-        rsync -av "$FLATBUFFERS_PATH/" package/usr/include/flatbuffers/
-
+        rsync -av --include '*/' --include '*.h' --exclude '*' "$FLATBUFFERS_PATH/" package/usr/include/flatbuffers/
 
     # 8. Package into a .deb File
     - name: Create .deb Package
@@ -99,7 +98,7 @@ jobs:
         Section: libs
         Priority: optional
         Architecture: ${MATRIX_ARCH}
-        Maintainer: Your Name <your_email@example.com>
+        Maintainer: Shadab Shaikh me@shadab-shaikh.de
         Description: TensorFlow Lite library and headers
         EOT
         dpkg-deb --build package tensorflowlite-${{ matrix.arch }}.deb
