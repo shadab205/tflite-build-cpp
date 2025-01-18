@@ -60,8 +60,7 @@ jobs:
     - name: Build TensorFlowLite
       run: |
         cd tensorflow
-        ./configure --python_path=/usr/bin/python3
-        bazel build --python_path=/usr/bin/python3 --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures //tensorflow/lite:libtensorflowlite.so
+        bazel build --define xnn_enable_avxvnniint8=false --jobs=$(nproc) --config=monolithic --verbose_failures //tensorflow/lite:libtensorflowlite.so
 
     # 7. Copy Necessary Files
     - name: Prepare Libraries and Headers
