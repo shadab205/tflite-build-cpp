@@ -24,16 +24,14 @@ jobs:
         arch: [amd64, elinux_aarch64]
 
     steps:
-    # 1. Checkout the Workflow Repository
+
     - name: Checkout Repository
       uses: actions/checkout@v3
 
-    # 2. Clone TensorFlow Source Code
     - name: Clone TensorFlow Repository
       run: |
         git clone --depth 1 --branch ${{ env.TENSORFLOW_BRANCH }} https://github.com/tensorflow/tensorflow.git
 
-    # 3. Install Bazel
     - name: Install Bazel
       run: |
         sudo apt-get update
@@ -43,7 +41,6 @@ jobs:
         sudo mv bazel-6.5.0-linux-x86_64 /usr/local/bin/bazel
         bazel --version
 
-    # 4. Install Build Dependencies
     - name: Install Dependencies
       run: |
         sudo apt-get update
@@ -101,7 +98,6 @@ jobs:
         rsync -av --include '*/' --include '*.h' --exclude '*' "$FLATBUFFERS_PATH/" package/usr/include/flatbuffers/
         find package/usr/include -type d -empty -delete
         
-    # 8. Package into a .deb File
     - name: Create .deb Package
       run: |
         mkdir -p package/DEBIAN
