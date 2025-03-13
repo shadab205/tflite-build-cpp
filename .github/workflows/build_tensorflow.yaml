@@ -12,8 +12,8 @@ permissions:
   contents: write  # Grant write access to allow pushing tags
 
 env:
-  TENSORFLOW_BRANCH: "v2.18.0"  # Specify the TensorFlow branch or tag manually
-  TENSORFLOW_VERSION: "2.18.0"  # Manually define the TensorFlow version
+  TENSORFLOW_BRANCH: "v2.19.0"  # Specify the TensorFlow branch or tag manually
+  TENSORFLOW_VERSION: "2.19.0"  # Manually define the TensorFlow version
 
 jobs:
   build-and-package:
